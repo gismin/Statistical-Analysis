@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 const features = [
   {
     href: "/time",
     title: "Time",
     description: "When are highs & lows typically set? Reversal probability by session time.",
-    status: "coming-soon",
+    status: "live",
   },
   {
     href: "/distance",
@@ -48,16 +47,29 @@ export default function Home() {
             >
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{f.title}</h2>
-                {f.status === "coming-soon" && (
+                {f.status === "coming-soon" ? (
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                     Coming soon
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-green-500/20 border border-green-500/40 px-2 py-0.5 text-xs text-green-400">
+                    Live
                   </span>
                 )}
               </div>
               <p className="mb-5 text-sm text-muted-foreground">{f.description}</p>
-              <Button variant="outline" size="sm" disabled={f.status === "coming-soon"}>
-                {f.title} →
-              </Button>
+              {f.status === "coming-soon" ? (
+                <span className="inline-flex h-7 items-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium text-muted-foreground opacity-50 cursor-not-allowed">
+                  {f.title} →
+                </span>
+              ) : (
+                <Link
+                  href={f.href}
+                  className="inline-flex h-7 items-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  {f.title} →
+                </Link>
+              )}
             </div>
           ))}
         </div>

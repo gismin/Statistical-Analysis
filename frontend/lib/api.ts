@@ -16,7 +16,51 @@ export type HealthStatus = {
   checks?: Record<string, string>;
 };
 
+export type TimeBucket = {
+  bucket: string;          // "0–10%"
+  bucket_index: number;    // 0–9
+  count: number;
+  reversal_count: number;
+  reversal_rate: number | null;     // 0–1
+  continuation_rate: number | null; // 0–1
+};
+
+export type CurrentSession = {
+  high_time_pct: number;
+  low_time_pct: number;
+  high_bucket: number;
+  low_bucket: number;
+  early_high: boolean;
+  early_low: boolean;
+  elapsed_pct: number;
+  session_start: string;
+};
+
+export type TimeStatsResponse = {
+  symbol: string;
+  timeframe: string;
+  total_sessions: number;
+  high_distribution: TimeBucket[];
+  low_distribution: TimeBucket[];
+  current_session: CurrentSession | null;
+};
+
+export const SYMBOLS = [
+  "BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT",
+  "DOGE/USDT", "ADA/USDT", "AVAX/USDT", "LINK/USDT", "DOT/USDT",
+] as const;
+
+export type Symbol = (typeof SYMBOLS)[number];
+
+export const TIMEFRAMES = ["1d", "1w"] as const;
+export type Timeframe = (typeof TIMEFRAMES)[number];
+
 export const api = {
   health: () => apiFetch<HealthStatus>("/api/health"),
   healthDetailed: () => apiFetch<HealthStatus>("/api/health/detailed"),
+
+  timeStats: (symbol: string, timeframe: string) =>
+    apiFetch<TimeStatsResponse>(
+      `/api/stats/time?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`
+    ),
 };
