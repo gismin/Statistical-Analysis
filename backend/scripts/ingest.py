@@ -25,6 +25,7 @@ load_dotenv()
 
 from app.database import AsyncSessionLocal, engine, init_db  # noqa: E402
 from app.models.ohlcv import OHLCV  # noqa: E402
+from app.services.distance_stats import compute_distance_stats  # noqa: E402
 from app.services.time_stats import compute_session_stats  # noqa: E402
 
 logging.basicConfig(level="INFO", format="%(asctime)s [%(levelname)s] %(message)s")
@@ -180,6 +181,15 @@ async def run(
                             logger.info(f"  {symbol} {tf}: {processed} time sessions computed")
                         except Exception as e:
                             logger.error(f"  {symbol} {tf}: time stats failed — {e}")
+
+            async with AsyncSessionLocal() as db:
+                for symbol in symbols:
+                    for tf in primary_timeframes:
+                        try:
+                            processed = await compute_distance_stats(db, symbol, tf)
+                            logger.info(f"  {symbol} {tf}: {processed} distance sessions computed")
+                        except Exception as e:
+                            logger.error(f"  {symbol} {tf}: distance stats failed — {e}")
 
             logger.info("Session stats done.")
 

@@ -11,7 +11,7 @@ const features = [
     href: "/distance",
     title: "Distance",
     description: "How far has price moved vs. history? Extension vs. reversal probability.",
-    status: "coming-soon",
+    status: "live",
   },
   {
     href: "/summary",

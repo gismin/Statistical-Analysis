@@ -55,6 +55,33 @@ export type Symbol = (typeof SYMBOLS)[number];
 export const TIMEFRAMES = ["1d", "1w"] as const;
 export type Timeframe = (typeof TIMEFRAMES)[number];
 
+export type DistanceBucket = {
+  bucket: string;           // "0–25%"
+  bucket_index: number;     // 0–4
+  count: number;
+  reversal_count: number;
+  reversal_rate: number | null;
+  continuation_rate: number | null;
+};
+
+export type DistanceCurrentSession = {
+  range_atr_pct: number;
+  atr14: number;
+  current_range: number;
+  bucket: number;
+  small_range: boolean;
+  session_start: string;
+};
+
+export type DistanceStatsResponse = {
+  symbol: string;
+  timeframe: string;
+  total_sessions: number;
+  distribution: DistanceBucket[];
+  small_range_threshold: number;
+  current_session: DistanceCurrentSession | null;
+};
+
 export const api = {
   health: () => apiFetch<HealthStatus>("/api/health"),
   healthDetailed: () => apiFetch<HealthStatus>("/api/health/detailed"),
@@ -62,5 +89,10 @@ export const api = {
   timeStats: (symbol: string, timeframe: string) =>
     apiFetch<TimeStatsResponse>(
       `/api/stats/time?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`
+    ),
+
+  distanceStats: (symbol: string, timeframe: string) =>
+    apiFetch<DistanceStatsResponse>(
+      `/api/stats/distance?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`
     ),
 };

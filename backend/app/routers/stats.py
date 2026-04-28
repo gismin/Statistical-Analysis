@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.services.distance_stats import compute_distance_stats, get_distance_distribution
 from app.services.time_stats import compute_session_stats, get_time_distribution
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
@@ -46,6 +47,35 @@ async def compute_time_stats(
     """Trigger on-demand recomputation of session stats for a symbol/timeframe."""
     _validate(symbol, timeframe)
     processed = await compute_session_stats(db, symbol, timeframe)
+    return {"symbol": symbol, "timeframe": timeframe, "sessions_processed": processed}
+
+
+@router.get("/distance")
+async def distance_stats(
+    symbol: str = Query(..., example="BTC/USDT"),
+    timeframe: str = Query(..., example="1d"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return range-vs-ATR distribution stats for a given symbol and timeframe."""
+    _validate(symbol, timeframe)
+    result = await get_distance_distribution(db, symbol, timeframe)
+    if result["total_sessions"] == 0:
+        raise HTTPException(
+            404,
+            "No distance stats found. Run the ingest + compute pipeline first.",
+        )
+    return result
+
+
+@router.post("/distance/compute")
+async def compute_distance_stats_endpoint(
+    symbol: str = Query(..., example="BTC/USDT"),
+    timeframe: str = Query(..., example="1d"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Trigger on-demand recomputation of distance stats for a symbol/timeframe."""
+    _validate(symbol, timeframe)
+    processed = await compute_distance_stats(db, symbol, timeframe)
     return {"symbol": symbol, "timeframe": timeframe, "sessions_processed": processed}
 
 
