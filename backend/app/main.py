@@ -8,7 +8,7 @@ import app.models  # noqa: F401 — registers all SQLAlchemy models with Base.me
 
 from app.config import settings
 from app.database import init_db
-from app.routers import health, stats
+from app.routers import health, p1p2, stats
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(stats.router)
+app.include_router(p1p2.router)
 
 
 @app.get("/")
