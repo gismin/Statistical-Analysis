@@ -6,6 +6,7 @@ Usage:
     python -m scripts.ingest --symbol BTC/USDT     # single symbol
     python -m scripts.ingest --tf 1d               # single primary timeframe
     python -m scripts.ingest --skip-stats          # skip session stat computation
+    python -m scripts.ingest --compute-p1p2        # also populate p1p2_stats table
 """
 
 import argparse
@@ -26,6 +27,7 @@ load_dotenv()
 from app.database import AsyncSessionLocal, engine, init_db  # noqa: E402
 from app.models.ohlcv import OHLCV  # noqa: E402
 from app.services.distance_stats import compute_distance_stats  # noqa: E402
+from app.services.p1p2_ingest import compute_p1p2_stats  # noqa: E402
 from app.services.time_stats import compute_session_stats  # noqa: E402
 
 logging.basicConfig(level="INFO", format="%(asctime)s [%(levelname)s] %(message)s")
@@ -132,6 +134,7 @@ async def run(
     symbols: list[str],
     primary_timeframes: list[str],
     skip_stats: bool,
+    compute_p1p2: bool,
 ) -> None:
     await init_db()
 
@@ -193,6 +196,19 @@ async def run(
 
             logger.info("Session stats done.")
 
+        # ── P1/P2 stats computation ───────────────────────────────────────────
+        if compute_p1p2:
+            logger.info("Computing P1/P2 stats ...")
+            async with AsyncSessionLocal() as db:
+                for symbol in symbols:
+                    for tf in primary_timeframes:
+                        try:
+                            processed = await compute_p1p2_stats(db, symbol, tf)
+                            logger.info(f"  {symbol} {tf}: {processed} P1/P2 rows upserted")
+                        except Exception as e:
+                            logger.error(f"  {symbol} {tf}: P1/P2 stats failed — {e}")
+            logger.info("P1/P2 stats done.")
+
     finally:
         await exchange.close()
         await session.close()
@@ -204,9 +220,17 @@ if __name__ == "__main__":
     parser.add_argument("--symbol", help="Single symbol, e.g. BTC/USDT")
     parser.add_argument("--tf", help="Single primary timeframe, e.g. 1d")
     parser.add_argument("--skip-stats", action="store_true", help="Skip session stat computation")
+    parser.add_argument("--compute-p1p2", action="store_true", help="Populate p1p2_stats table")
     args = parser.parse_args()
 
     symbols = [args.symbol] if args.symbol else SYMBOLS
     timeframes = [args.tf] if args.tf else PRIMARY_TIMEFRAMES
 
-    asyncio.run(run(symbols, timeframes, skip_stats=args.skip_stats))
+    asyncio.run(
+        run(
+            symbols,
+            timeframes,
+            skip_stats=args.skip_stats,
+            compute_p1p2=args.compute_p1p2,
+        )
+    )
