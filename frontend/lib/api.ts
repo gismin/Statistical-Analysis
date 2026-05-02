@@ -82,6 +82,85 @@ export type DistanceStatsResponse = {
   current_session: DistanceCurrentSession | null;
 };
 
+// ── P1/P2 types ───────────────────────────────────────────────────────────────
+
+export type FlipRisk = {
+  total: number;
+  flipped: number;
+  pct: number;
+  label: "low" | "moderate" | "high";
+};
+
+export type P2LikelihoodTime = {
+  pct_formed_by_now: number;
+  p2_median_time_pct: number;
+  p2_p90_time_pct: number;
+  message: string;
+};
+
+export type P2LikelihoodDist = {
+  pct_moved_further: number;
+  current_dist_abs: number;
+  p2_median_dist_abs: number;
+  message: string;
+};
+
+export type Warnings = {
+  time_warning: string | null;
+  dist_warning: string | null;
+  triggered: boolean;
+};
+
+export type DataQuality = {
+  total: number;
+  reliable: boolean;
+  message: string;
+};
+
+export type P1P2SummaryResponse = {
+  flip_risk: FlipRisk;
+  p2_likelihood_time: P2LikelihoodTime;
+  p2_likelihood_dist: P2LikelihoodDist;
+  warnings: Warnings;
+  data_quality: DataQuality;
+};
+
+export type ConfidenceTarget = {
+  confidence: number;
+  dist_pct: number;
+  price: number;
+  sample_size: number;
+};
+
+export type P1P2ConfidenceResponse = {
+  symbol: string;
+  timeframe: string;
+  open_price: number;
+  long_targets: ConfidenceTarget[];
+  short_targets: ConfidenceTarget[];
+  data_quality: DataQuality;
+};
+
+export type P1P2SummaryParams = {
+  symbol: string;
+  timeframe: string;
+  current_time_pct: number;
+  current_p1_dist_abs: number;
+  current_p2_dist_abs: number;
+  from_date?: string;
+  to_date?: string;
+};
+
+export type P1P2ConfidenceParams = {
+  symbol: string;
+  timeframe: string;
+  open_price: number;
+  from_date?: string;
+  to_date?: string;
+};
+
+// ── API client ────────────────────────────────────────────────────────────────
+
 export const api = {
   health: () => apiFetch<HealthStatus>("/api/health"),
   healthDetailed: () => apiFetch<HealthStatus>("/api/health/detailed"),
@@ -95,4 +174,28 @@ export const api = {
     apiFetch<DistanceStatsResponse>(
       `/api/stats/distance?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`
     ),
+
+  p1p2Summary: (p: P1P2SummaryParams) => {
+    const q = new URLSearchParams({
+      symbol: p.symbol,
+      timeframe: p.timeframe,
+      current_time_pct: String(p.current_time_pct),
+      current_p1_dist_abs: String(p.current_p1_dist_abs),
+      current_p2_dist_abs: String(p.current_p2_dist_abs),
+    });
+    if (p.from_date) q.set("from_date", p.from_date);
+    if (p.to_date) q.set("to_date", p.to_date);
+    return apiFetch<P1P2SummaryResponse>(`/api/p1p2/summary?${q}`);
+  },
+
+  p1p2ConfidenceTargets: (p: P1P2ConfidenceParams) => {
+    const q = new URLSearchParams({
+      symbol: p.symbol,
+      timeframe: p.timeframe,
+      open_price: String(p.open_price),
+    });
+    if (p.from_date) q.set("from_date", p.from_date);
+    if (p.to_date) q.set("to_date", p.to_date);
+    return apiFetch<P1P2ConfidenceResponse>(`/api/p1p2/confidence-targets?${q}`);
+  },
 };

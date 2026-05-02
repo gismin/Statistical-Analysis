@@ -14,16 +14,16 @@ const features = [
     status: "live",
   },
   {
-    href: "/summary",
-    title: "Summary",
-    description: "Combined Time + Distance across two timeframes. Confidence Targets.",
-    status: "coming-soon",
+    href: "/p1p2/summary",
+    title: "P1/P2 Summary",
+    description: "Flip risk · P2 likelihood by time & distance · Early-P1 warnings.",
+    status: "live",
   },
   {
-    href: "/overview",
-    title: "Overview",
-    description: "All assets × all stats in one sortable table.",
-    status: "coming-soon",
+    href: "/p1p2/distance",
+    title: "Confidence Targets",
+    description: "Long & short price targets at 90/80/70/60/50% confidence, from historical P2 moves.",
+    status: "live",
   },
 ];
 
