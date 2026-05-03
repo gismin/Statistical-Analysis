@@ -149,6 +149,7 @@ export type P1P2SummaryParams = {
   current_p2_dist_abs: number;
   from_date?: string;
   to_date?: string;
+  weekdays?: string; // comma-separated "0,1,2,3,4"
 };
 
 export type P1P2ConfidenceParams = {
@@ -157,6 +158,7 @@ export type P1P2ConfidenceParams = {
   open_price: number;
   from_date?: string;
   to_date?: string;
+  weekdays?: string;
 };
 
 // ── API client ────────────────────────────────────────────────────────────────
@@ -185,6 +187,7 @@ export const api = {
     });
     if (p.from_date) q.set("from_date", p.from_date);
     if (p.to_date) q.set("to_date", p.to_date);
+    if (p.weekdays) q.set("weekdays", p.weekdays);
     return apiFetch<P1P2SummaryResponse>(`/api/p1p2/summary?${q}`);
   },
 
@@ -196,6 +199,7 @@ export const api = {
     });
     if (p.from_date) q.set("from_date", p.from_date);
     if (p.to_date) q.set("to_date", p.to_date);
+    if (p.weekdays) q.set("weekdays", p.weekdays);
     return apiFetch<P1P2ConfidenceResponse>(`/api/p1p2/confidence-targets?${q}`);
   },
 };

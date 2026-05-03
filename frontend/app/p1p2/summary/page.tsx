@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   api,
   type P1P2SummaryResponse,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { P1P2Controls, type P1P2ControlsState } from "@/components/p1p2-controls";
 import { UtcClock } from "@/components/utc-clock";
+import { RefreshTimer } from "@/components/refresh-timer";
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 
@@ -234,6 +235,7 @@ export default function P1P2SummaryPage() {
     timeframe: "1w",
     fromDate: "",
     toDate: "",
+    weekdays: [],
   });
 
   const [timePct, setTimePct] = useState(35);
@@ -244,10 +246,9 @@ export default function P1P2SummaryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function load() {
+  const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    setData(null);
     api
       .p1p2Summary({
         symbol: controls.symbol,
@@ -257,11 +258,15 @@ export default function P1P2SummaryPage() {
         current_p2_dist_abs: p2Dist,
         from_date: controls.fromDate || undefined,
         to_date: controls.toDate || undefined,
+        weekdays:
+          controls.weekdays.length > 0
+            ? controls.weekdays.join(",")
+            : undefined,
       })
       .then(setData)
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }
+  }, [controls, timePct, p1Dist, p2Dist]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -279,7 +284,8 @@ export default function P1P2SummaryPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <RefreshTimer onRefresh={load} loading={loading} />
             <Link
               href="/p1p2/distance"
               className="text-sm text-muted-foreground hover:text-foreground"

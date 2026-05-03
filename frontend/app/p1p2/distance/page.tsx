@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { api, type P1P2ConfidenceResponse, type ConfidenceTarget } from "@/lib/api";
 import { P1P2Controls, type P1P2ControlsState } from "@/components/p1p2-controls";
 import { UtcClock } from "@/components/utc-clock";
+import { RefreshTimer } from "@/components/refresh-timer";
 
 // ── Confidence table ───────────────────────────────────────────────────────────
 
@@ -108,6 +109,7 @@ export default function P1P2DistancePage() {
     timeframe: "1w",
     fromDate: "",
     toDate: "",
+    weekdays: [],
   });
 
   const [openPrice, setOpenPrice] = useState<number>(0);
@@ -116,14 +118,13 @@ export default function P1P2DistancePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function load() {
+  const load = useCallback(() => {
     if (!openPrice || openPrice <= 0) {
       setError("Enter a valid open price > 0");
       return;
     }
     setLoading(true);
     setError(null);
-    setData(null);
     api
       .p1p2ConfidenceTargets({
         symbol: controls.symbol,
@@ -131,11 +132,15 @@ export default function P1P2DistancePage() {
         open_price: openPrice,
         from_date: controls.fromDate || undefined,
         to_date: controls.toDate || undefined,
+        weekdays:
+          controls.weekdays.length > 0
+            ? controls.weekdays.join(",")
+            : undefined,
       })
       .then(setData)
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }
+  }, [controls, openPrice]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -153,7 +158,8 @@ export default function P1P2DistancePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <RefreshTimer onRefresh={load} loading={loading} />
             <Link
               href="/p1p2/summary"
               className="text-sm text-muted-foreground hover:text-foreground"
